@@ -1,3 +1,3 @@
-# Intern2020_Prototype
+# Interns_2020
 
-This is the main code for our prototype
+This is where we collaborate on computer code for our project.
