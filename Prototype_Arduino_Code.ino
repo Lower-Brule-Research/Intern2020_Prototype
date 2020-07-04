@@ -26,12 +26,14 @@ void loop() {
  
 }
 
-void response {
+void response() {
+  DynamicJsonDocument doc(1024);
   doc["type"] = "response";
   // Get data from sensors
   doc["latitude"] = 43.98756;
   doc["longitude"] = 74.90382;
   serializeJson(doc,Serial);
+  Serial.println();
 }
 
 static void printFloat(float val, bool valid, int len, int prec)
