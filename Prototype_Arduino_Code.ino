@@ -1,3 +1,6 @@
+/*------------------------------------------------------------------------------
+This code get's loaded on to the Arduino!
+------------------------------------------------------------------------------*/
 #include <ArduinoJson.h>
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
@@ -13,6 +16,8 @@ SoftwareSerial ss(RXPin, TXPin);
 
 String message = "";
 bool messageReady = false;
+String gpslat;
+String gpslong;
 
 void setup() {
   Serial.begin(9600);
@@ -20,41 +25,20 @@ void setup() {
 }
 
 void loop() {
-  
- smartDelay(1000);
- response ();
+    smartDelay(1000);
+    gpslat = String(gps.location.lat(), 6);
+    gpslong = String(gps.location.lng(), 6);
+    response();
+  }
  
-}
-
 void response() {
-  DynamicJsonDocument doc(1024);
-  doc["type"] = "response";
-  // Get data from sensors
-  doc["latitude"] = 43.98756;
-  doc["longitude"] = 74.90382;
-  serializeJson(doc,Serial);
-  Serial.println();
-}
+      DynamicJsonDocument doc(1024);
+      doc["type"] = "response";
+      doc["latitude"] = gpslat;
+      doc["longitude"] = gpslong;
+      serializeJson(doc,Serial);
+  }
 
-static void printFloat(float val, bool valid, int len, int prec)
-{
-  if (!valid)
-  {
-    while (len-- > 1)
-      Serial.print('*');
-    Serial.print(' ');
-  }
-  else
-  {
-    Serial.print(val, prec);
-    int vi = abs((int)val);
-    int flen = prec + (val < 0.0 ? 2 : 1); // . and -
-    flen += vi >= 1000 ? 4 : vi >= 100 ? 3 : vi >= 10 ? 2 : 1;
-    for (int i=flen; i<len; ++i)
-      Serial.print(' ');
-  }
-  smartDelay(0);
-}
 static void smartDelay(unsigned long ms)
 {
   unsigned long start = millis();
