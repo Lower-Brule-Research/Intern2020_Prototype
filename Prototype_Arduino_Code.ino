@@ -23,13 +23,6 @@ long lastBeat = 0; //Time at which the last beat occurred
 float beatsPerMinute;
 int beatAvg;
 
-void setup()
-{
-
-}
-
-
-
 LiquidCrystal_I2C lcd(0x27,16,2);   //Wiring Diagram https://surtrtech.com/2018/01/27/how-to-simply-use-ds1302-rtc-module-with-arduino-board-and-lcd-screen/
 
 virtuabotixRTC myRTC(6, 7, 8);  //If you change the wiring change the pins here also
@@ -37,16 +30,18 @@ virtuabotixRTC myRTC(6, 7, 8);  //If you change the wiring change the pins here 
 static const int RXPin = 4, TXPin = 3;
 static const uint32_t GPSBaud = 9600;
 
-// The TinyGPS++ object
-TinyGPSPlus gps;
-
-// The serial connection to the GPS device
-SoftwareSerial ss(RXPin, TXPin);
+TinyGPSPlus gps; // The TinyGPS++ object
+SoftwareSerial ss(RXPin, TXPin); // The serial connection to the GPS device
 
 String message = "";
 bool messageReady = false;
 String gpslat;
 String gpslong;
+
+int HeartRatePin= 12;
+int DistressPin= 11;
+int HeartState = 0;
+int DistressState = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -56,7 +51,6 @@ void setup() {
   //but remember to "comment/remove" this function once you're done and the module will continue counting it automatically
   ss.begin(GPSBaud);
 
-  //   Serial.begin(115200); Originally this is what the heart rate monitor used. Not sure if we can use 9600 Baud.
   while(!Serial); //We must wait for Teensy to come online
   delay(100);
   lcd.clear(); 
@@ -79,57 +73,76 @@ void setup() {
   int adcRange = 16384; //Options: 2048, 4096, 8192, 16384
 
   particleSensor.setup(ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange); //Configure sensor with these settings
+
+  pinMode(HeartRatePin, INPUT);
+  pinMode(DistressPin, INPUT);
+
 }
 
-void loop() {
-  
-   //Here code displays time and date on the LCD
-   lcd.clear(); 
-   myRTC.updateTime();
-   lcd.setCursor(0,0);
-   lcd.print(myRTC.dayofmonth);
-   lcd.print("/");
-   lcd.print(myRTC.month);
-   lcd.print("/");
-   lcd.print(myRTC.year);
-   lcd.setCursor(0,1);
-   lcd.print(myRTC.hours);
-   lcd.print(":");
-   lcd.print(myRTC.minutes);
-   lcd.print(":");
-   lcd.print(myRTC.seconds);
-   delay(1000);
-  
-   //Here the Heart Rate Sensor gets checked and the AVG BPM gets displayed on the LCD.
-   particleSensor.check(); 
-   while (particleSensor.available()) {
+void loop() 
+{
+  int HeartState = digitalRead(HeartRatePin); //Heart Rate Sensor gets checked if a button gets pressed
+  if (HeartState == 1) //If button gets pressed we calculate and display BPM
+  {  
+    lcd.clear();
+    particleSensor.check(); 
+    while (particleSensor.available())
+    { 
       particleSensor.nextSample();  
       long irValue = particleSensor.getIR();    //Reading the IR value it will permit us to know if there's a finger on the sensor or not
-
-      long delta = millis() - lastBeat;                   //Measure duration between two beats
-      lastBeat = millis();
   
-      beatsPerMinute = 60 / (delta / 1000.0);           //Calculating the BPM
+      if (checkForBeat(irValue) == true)              //If a heart beat is detected
+      {
+        long delta = millis() - lastBeat;                   //Measure duration between two beats
+        lastBeat = millis();
       
-      rates[rateSpot++] = (byte)beatsPerMinute; //Store this reading in the array
-      rateSpot %= RATE_SIZE; //Wrap variable
-      beatAvg = 0;
-      for (byte x = 0 ; x < RATE_SIZE ; x++)
-        beatAvg += rates[x];
-      beatAvg /= RATE_SIZE;
-      lcd.print(", Avg BPM=");
-      lcd.print(beatAvg);
-      }
-     }
+        beatsPerMinute = 60 / (delta / 1000.0);           //Calculating the BPM
   
-    //Here GPS Data gets sent to the ESP8266 via a JSON response
-    smartDelay(1000);
-    gpslat = String(gps.location.lat(), 6);
-    gpslong = String(gps.location.lng(), 6);
-    response();
+        if (beatsPerMinute < 255 && beatsPerMinute > 20)    //To calculate the average we strore some values (4) then do some math to calculate the average
+        {
+          rates[rateSpot++] = (byte)beatsPerMinute; //Store this reading in the array
+          rateSpot %= RATE_SIZE; //Wrap variable
+          beatAvg = 0;
+          for (byte x = 0 ; x < RATE_SIZE ; x++)
+            beatAvg += rates[x];
+          beatAvg /= RATE_SIZE;
+          lcd.setCursor(0,0);
+          lcd.print("Avg BPM=");
+          lcd.print(beatAvg);
+          delay(5000);
+        }
+      }    
+    } 
   }
- 
-void response() {
+  int DistressState = digitalRead(DistressPin);
+  if (DistressState == 1) //If button gets pressed we send lat and long to ESP8266
+    {  
+      //Here GPS Data gets sent to the ESP8266 via a JSON response
+      smartDelay(1000);
+      gpslat = String(gps.location.lat(), 6);
+      gpslong = String(gps.location.lng(), 6);
+      response();
+    }
+    //Here code displays time and date on the LCD
+    lcd.clear(); 
+    myRTC.updateTime();
+    lcd.setCursor(0,0);
+    lcd.print(myRTC.dayofmonth);
+    lcd.print("/");
+    lcd.print(myRTC.month);
+    lcd.print("/");
+    lcd.print(myRTC.year);
+    lcd.setCursor(0,1);
+    lcd.print(myRTC.hours);
+    lcd.print(":");
+    lcd.print(myRTC.minutes);
+    lcd.print(":");
+    lcd.print(myRTC.seconds);
+    delay(1000);
+}
+
+void response() 
+  {
       DynamicJsonDocument doc(1024);
       doc["type"] = "response";
       doc["latitude"] = gpslat;
@@ -137,12 +150,13 @@ void response() {
       serializeJson(doc,Serial);
   }
 
-static void smartDelay(unsigned long ms)
-{
+static void smartDelay(unsigned long ms) 
+  {
   unsigned long start = millis();
   do 
-  {
-    while (ss.available())
-      gps.encode(ss.read());
-  } while (millis() - start < ms);
-}
+    {
+      while (ss.available())
+        gps.encode(ss.read());
+    } 
+  while (millis() - start < ms);
+  }
