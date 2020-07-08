@@ -1,13 +1,13 @@
 /*------------------------------------------------------------------------------
 This gets loaded onto the ESP8266
 ------------------------------------------------------------------------------*/
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <ArduinoJson.h>
 
 ESP8266WebServer server;
-char* ssid = "Your Network Name";
-char* password = "Your Password";
+char* ssid = "your wifi network name";
+char* password = "your wifi network password";
 
 void setup()
 {
@@ -33,8 +33,12 @@ void loop()
 
 void handleIndex()
 {
+  // Send a JSON-formatted request with key "type" and value "request"
+  // then parse the JSON-formatted response with keys "gas" and "distance"
   DynamicJsonDocument doc(1024);
-  double latitude = 0, longitude = 0;
+  // Sending the request
+  doc["type"] = "request";
+  serializeJson(doc,Serial);
   // Reading the response
   boolean messageReady = false;
   String message = "";
@@ -51,11 +55,12 @@ void handleIndex()
     Serial.println(error.c_str());
     return;
   }
-  latitude = doc["latitude"];
-  longitude = doc["longitude"];
+  String latitude = doc["latitude"];
+  String longitude = doc["longitude"];
   // Prepare the data for serving it over HTTP
-  String output = "latitude: " + String(latitude) + "\n";
-  output += "longitude: " + String(longitude);
+  
+  String output = "latitude: " + latitude + "\n";
+  output += "longitude: " + longitude;
   // Serve the data as plain text, for example
   server.send(200,"text/plain",output);
 }
