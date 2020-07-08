@@ -1,5 +1,5 @@
 /*------------------------------------------------------------------------------
-This code get's loaded on to the Arduino and sends GPS location to an ESP8266.
+This code get's loaded on to the Arduino and sends GPS location to an ESP8266 when a distress button is pressed.
 If you don't have a GPS module connected, it will just send 0.00000 as the latitude and longitude.
 ------------------------------------------------------------------------------*/
 
@@ -16,7 +16,8 @@ SoftwareSerial ss(RXPin, TXPin); // The serial connection to the GPS device
 String gpslat;
 String gpslong;
 
-int DistressPin= 11;
+int DistressPin= 11;  // Connect the distress button data pin to digital pin 11 on the arduino
+
 int DistressState = 0;
 
 void setup() {
