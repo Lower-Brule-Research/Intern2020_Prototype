@@ -1,3 +1,5 @@
+// https://www.electronicshub.org/send-an-email-using-esp8266/
+
 #include <ESP8266WiFi.h>
 const char* ssid = "SSID"; // Enter the SSID of your WiFi Network.
 const char* password = "PASSWORD";// Enter the Password of your WiFi Network.
