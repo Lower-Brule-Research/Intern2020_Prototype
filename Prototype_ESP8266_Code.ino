@@ -4,8 +4,8 @@
 #include <Arduino.h>
 #include <TinyGPS++.h>
 
-const char* ssid = "LBDS"; // Enter the SSID of your WiFi Network.
-const char* password = "#BRul3!!";// Enter the Password of your WiFi Network.
+const char* ssid = "Network Name"; // Enter the SSID of your WiFi Network.
+const char* password = "Password";// Enter the Password of your WiFi Network.
 const int gp0_Pin = 2;
 int gp0_State = 0;
 
@@ -60,7 +60,7 @@ void loop() {
       // We now create a URI for the request
       String url = "/pushingbox?";
       url += "devid=";
-      url += "vDBD436D217B61B2";
+      url += "vDBD436D217B61B2"; // Your ID here!!
       url += "&LDR="+LdrValueSend;
       url += "&Button="+Button_status;
     
