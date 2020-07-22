@@ -43,12 +43,6 @@ void loop() {
  lcd.clear(); //Here after clearing the LCD we take the time from the module and print it on the screen with usual LCD functions
  myRTC.updateTime();
  lcd.setCursor(0,0);
- lcd.print(myRTC.dayofmonth);
- lcd.print("/");
- lcd.print(myRTC.month);
- lcd.print("/");
- lcd.print(myRTC.year);
- lcd.setCursor(0,1);
  lcd.print(myRTC.hours);
  lcd.print(":");
  lcd.print(myRTC.minutes);
