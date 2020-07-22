@@ -1,5 +1,5 @@
 /*------------------------------------------------------------------------------
-This code get's loaded on to the Arduino and should date, time, and heartrate on an LCD display.
+This code get's loaded on to the Arduino and should display the time and heartrate for the person on an LCD display.
 ------------------------------------------------------------------------------*/
 #include <Wire.h>
 #include "MAX30105.h"
