@@ -1,5 +1,6 @@
 /*------------------------------------------------------------------------------
-This code get's loaded on to the Arduino and will display the time or heartrate depending on 
+This code get's loaded on to the Arduino and will display the time or heartrate 
+depending on which button is pressed
 ------------------------------------------------------------------------------*/
 #include <Wire.h>
 #include "MAX30105.h"
